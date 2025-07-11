@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ClariFi Lite - Result</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="container">
+    <h1>✨ Enhancement Complete!</h1>
+
+    <div class="audio-section">
+      <h2>🔊 Original Audio</h2>
+      <audio controls>
+        <source src="{{ original_file }}" type="audio/wav">
+        Your browser does not support the audio element.
+      </audio>
+
+      <h2>🎧 Enhanced Audio</h2>
+      <audio controls>
+        <source src="{{ enhanced_file }}" type="audio/wav">
+        Your browser does not support the audio element.
+      </audio>
+    </div>
+
+    <br><br>
+    <a href="{{ url_for('index') }}">🔁 Enhance another file</a>
+  </div>
+</body>
+</html>

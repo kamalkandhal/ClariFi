@@ -1,0 +1,12 @@
+flask
+gunicorn
+tensorflow==2.18.0
+keras==3.7.0
+numpy
+librosa
+soundfile
+scipy
+matplotlib
+pesq
+pystoi
+scikit-learn

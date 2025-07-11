@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ClariFi Lite - Speech Enhancement</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="container">
+    <h1>🎧 ClariFi Lite</h1>
+    <p>Upload a noisy .wav file and get an enhanced version!</p>
+
+    <form action="/enhance" method="post" enctype="multipart/form-data">
+      <input type="file" name="audiofile" accept=".wav" required>
+      <button type="submit">🚀 Enhance</button>
+    </form>
+  </div>
+</body>
+</html>
