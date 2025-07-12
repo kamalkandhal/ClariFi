@@ -1,5 +1,22 @@
-venv/
+# Ignore Python cache
 __pycache__/
-*.h5
-*.pkl
+*.py[cod]
+
+# Ignore local virtual environments
+venv/
+ENV/
+env/
+
+# Ignore model training datasets
 dataset/
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
+
+# Ignore logs and temp files
+*.log
+*.tmp
+
+# Ignore hidden system files
+*.swp
