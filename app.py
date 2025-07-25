@@ -34,10 +34,10 @@ def health():
 @app.route('/enhance', methods=['POST'])
 def enhance():
     try:
-        if 'audiofile' not in request.files:
-            return "❌ No file uploaded", 400
+        if 'audio_file' not in request.files:
+            return render_template('index.html', error="❌ No file uploaded")
 
-        file = request.files['audiofile']
+        file = request.files['audio_file']
 
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
@@ -57,11 +57,11 @@ def enhance():
                 pesq_score=f"{pesq_score:.2f}"
             )
 
-        return "❌ Invalid file type", 400
+        return render_template('index.html', error="❌ Invalid file type")
 
     except Exception as e:
         traceback.print_exc()
-        return f"⚠️ Enhancement failed: {str(e)}", 500
+        return render_template('index.html', error=f"⚠️ Enhancement failed: {str(e)}")
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 10000))
