@@ -1,58 +1,50 @@
 from flask import Flask, render_template, request, redirect, url_for
 import os
 from werkzeug.utils import secure_filename
-from model import load_model, enhance_speech
-from audio_utils import preprocess_audio, save_audio, calculate_pesq
+from enhance import enhance_audio
 
 app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = 'static/uploads'
-app.config['ENHANCED_FOLDER'] = 'static/enhanced'
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-os.makedirs(app.config['ENHANCED_FOLDER'], exist_ok=True)
+UPLOAD_FOLDER = "static/uploads"
+ENHANCED_FOLDER = "static/enhanced"
+ALLOWED_EXTENSIONS = {'wav'}
 
-model = load_model()
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(ENHANCED_FOLDER, exist_ok=True)
 
-@app.route('/')
-def index():
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.route('/', methods=['GET', 'POST'])
+def upload_file():
+    if request.method == 'POST':
+        # Handle no file selected
+        if 'file' not in request.files:
+            return redirect(request.url)
+        
+        file = request.files['file']
+        if file.filename == '':
+            return redirect(request.url)
+
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            original_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(original_path)
+
+            # Enhance and get PESQ score
+            enhanced_path, pesq_score = enhance_audio(original_path)
+
+            if enhanced_path:
+                return render_template(
+                    'result.html',
+                    original_file=original_path,
+                    enhanced_file=enhanced_path,
+                    pesq_score=pesq_score
+                )
+            else:
+                return "Enhancement failed", 500
+
     return render_template('index.html')
-
-@app.route('/enhance', methods=['POST'])
-def enhance():
-    if 'audio_file' not in request.files:
-        return render_template('index.html', error="❌ No file uploaded")
-
-    file = request.files['audio_file']
-    if file.filename == '':
-        return render_template('index.html', error="❌ No file selected")
-
-    filename = secure_filename(file.filename)
-    input_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    file.save(input_path)
-
-    # Preprocess the input
-    noisy_audio, sr = preprocess_audio(input_path)
-
-    # Enhance the speech using the model
-    enhanced_audio = enhance_speech(model, noisy_audio)
-
-    # Save enhanced audio
-    enhanced_filename = f"enhanced_{filename}"
-    enhanced_path = os.path.join(app.config['ENHANCED_FOLDER'], enhanced_filename)
-    save_audio(enhanced_path, enhanced_audio, sr)
-
-    # Calculate PESQ
-    try:
-        pesq_score = calculate_pesq(input_path, enhanced_path, sr)
-    except Exception as e:
-        pesq_score = None
-        print("PESQ calculation failed:", e)
-
-    return render_template(
-        'result.html',
-        original_file='/' + input_path,
-        enhanced_file='/' + enhanced_path,
-        pesq_score=pesq_score
-    )
 
 if __name__ == '__main__':
     app.run(debug=True)
