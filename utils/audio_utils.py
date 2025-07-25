@@ -1,6 +1,8 @@
 import numpy as np
 import scipy.signal
 import librosa
+from pypesq import pesq
+import soundfile as sf
 
 # Constants
 SR = 16000               # Sampling Rate
@@ -11,7 +13,7 @@ WINDOW_TYPE = 'hann'     # STFT window type
 def stft(y):
     """
     Compute the Short-Time Fourier Transform (STFT) of an audio signal.
-    
+
     Args:
         y (np.ndarray): Time-domain audio signal.
 
@@ -70,3 +72,27 @@ def butter_lowpass_filter(data, cutoff=8000, fs=SR, order=6):
 
     b, a = scipy.signal.butter(order, normal_cutoff, btype='low', analog=False)
     return scipy.signal.filtfilt(b, a, data)
+
+def calculate_pesq(ref_file, deg_file, sr=SR):
+    """
+    Calculate PESQ score between a reference and degraded audio file.
+
+    Args:
+        ref_file (str): Path to the reference (clean) audio file.
+        deg_file (str): Path to the degraded (enhanced) audio file.
+        sr (int): Sampling rate for PESQ.
+
+    Returns:
+        float: PESQ score.
+    """
+    ref, sr_ref = sf.read(ref_file)
+    deg, sr_deg = sf.read(deg_file)
+
+    if sr_ref != sr or sr_deg != sr:
+        raise ValueError(f"Sample rates do not match expected {sr} Hz.")
+
+    min_len = min(len(ref), len(deg))
+    ref = ref[:min_len]
+    deg = deg[:min_len]
+
+    return pesq(sr, ref, deg, 'wb')  # 'wb' = wideband PESQ
