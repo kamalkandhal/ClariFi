@@ -1,63 +1,77 @@
-
-<!-- templates/result.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Result - ClariFi</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ClariFi - Enhancement Result</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <h1>✅ Audio Enhanced!</h1>
 
-        <div class="player">
-            <h3>🔉 Original</h3>
-            <audio controls>
-                <source src="{{ original_file }}" type="audio/wav">
-                Your browser does not support audio playback.
-            </audio>
+  <header class="header">
+    <h1>🎧 ClariFi: Enhancement Result</h1>
+    <p>Listen to the before and after – powered by Deep Learning.</p>
+  </header>
 
-            <h3>✨ Enhanced</h3>
-            <audio controls>
-                <source src="{{ enhanced_file }}" type="audio/wav">
-                Your browser does not support audio playback.
-            </audio>
-        </div>
+  <section class="results">
+    <div class="audio-comparison">
+      <div class="audio-block">
+        <h2>🔉 Original Audio</h2>
+        <audio controls>
+          <source src="{{ original_file }}" type="audio/wav">
+          Your browser does not support the audio element.
+        </audio>
+      </div>
 
-        <a class="back" href="/">⬅️ Enhance Another</a>
+      <div class="audio-block">
+        <h2>🔊 Enhanced Audio</h2>
+        <audio controls>
+          <source src="{{ enhanced_file }}" type="audio/wav">
+          Your browser does not support the audio element.
+        </audio>
+      </div>
     </div>
+
+    {% if pesq_score %}
+    <p><strong>🎯 PESQ Score:</strong> {{ pesq_score }}</p>
+    {% endif %}
+
+    <a href="{{ enhanced_file }}" download class="btn">⬇️ Download Enhanced Audio</a>
+    <a href="{{ url_for('index') }}" class="btn-secondary">🔁 Try Another</a>
+  </section>
+
+  <footer class="footer">
+    <p>Author : Kamal Kandhal</p>
+  </footer>
+
+  <style>
+    .audio-comparison {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .audio-block {
+      background-color: #f9f9f9;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    @media(min-width: 768px) {
+      .audio-comparison {
+        flex-direction: row;
+        justify-content: space-between;
+      }
+
+      .audio-block {
+        flex: 1;
+        margin: 0 1rem;
+      }
+    }
+  </style>
+
 </body>
 </html>
-
-
-{% comment %} <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>ClariFi Lite - Result</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-  <div class="container">
-    <h1>✨ Enhancement Complete!</h1>
-
-    <div class="audio-section">
-      <h2>🔊 Original Audio</h2>
-      <audio controls>
-        <source src="{{ original_file }}" type="audio/wav">
-        Your browser does not support the audio element.
-      </audio>
-
-      <h2>🎧 Enhanced Audio</h2>
-      <audio controls>
-        <source src="{{ enhanced_file }}" type="audio/wav">
-        Your browser does not support the audio element.
-      </audio>
-    </div>
-
-    <br><br>
-    <a href="{{ url_for('index') }}">🔁 Enhance another file</a>
-  </div>
-</body>
-</html> {% endcomment %}

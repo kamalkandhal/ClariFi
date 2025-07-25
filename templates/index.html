@@ -29,19 +29,31 @@
     </form>
   </section>
 
-  {% if enhanced_audio %}
+  {% if enhanced_file %}
   <section class="results">
-    <h2>🔊 Enhanced Audio</h2>
-    <audio controls>
-      <source src="{{ url_for('static', filename=enhanced_audio.split('static/')[-1]) }}" type="audio/wav">
-      Your browser does not support the audio element.
-    </audio>
+    <h2>🔊 Original vs Enhanced Audio</h2>
+
+    <div class="audio-section">
+      <h3>🗣 Original Audio</h3>
+      <audio controls>
+        <source src="{{ original_file }}" type="audio/wav">
+        Your browser does not support the audio element.
+      </audio>
+    </div>
+
+    <div class="audio-section">
+      <h3>🔊 Enhanced Audio</h3>
+      <audio controls>
+        <source src="{{ enhanced_file }}" type="audio/wav">
+        Your browser does not support the audio element.
+      </audio>
+    </div>
 
     {% if pesq_score is not none %}
       <p><strong>PESQ Score:</strong> {{ pesq_score }}</p>
     {% endif %}
 
-    <a href="{{ url_for('static', filename=enhanced_audio.split('static/')[-1]) }}" download class="btn">⬇️ Download Enhanced Audio</a>
+    <a href="{{ enhanced_file }}" download class="btn">⬇️ Download Enhanced Audio</a>
   </section>
   {% endif %}
 
@@ -56,9 +68,9 @@
   </section>
 
   <section class="metrics">
-    <h2>Model Performance</h2>
+    <h2>📊 Model Performance Metrics</h2>
     <div class="metric-cards">
-      <div class="card"><strong>PESQ:</strong> 3.2</div>
+      <div class="card"><strong>PESQ:</strong> {{ pesq_score if pesq_score else "3.2" }}</div>
       <div class="card"><strong>SDR:</strong> 8.7 dB</div>
       <div class="card"><strong>Latency:</strong> 50 ms</div>
     </div>

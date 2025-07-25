@@ -1,70 +1,58 @@
+from flask import Flask, render_template, request, redirect, url_for
 import os
-import gc
-import traceback
-from flask import Flask, render_template, request, url_for
 from werkzeug.utils import secure_filename
-from enhance import enhance_audio
-
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  # Force CPU usage
+from model import load_model, enhance_speech
+from audio_utils import preprocess_audio, save_audio, calculate_pesq
 
 app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = 'static/uploads'
+app.config['ENHANCED_FOLDER'] = 'static/enhanced'
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+os.makedirs(app.config['ENHANCED_FOLDER'], exist_ok=True)
 
-# Configuration
-UPLOAD_FOLDER = 'static/uploads'
-ENHANCED_FOLDER = 'static/enhanced'
-ALLOWED_EXTENSIONS = {'wav'}
-
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['ENHANCED_FOLDER'] = ENHANCED_FOLDER
-
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-os.makedirs(ENHANCED_FOLDER, exist_ok=True)
-
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+model = load_model()
 
 @app.route('/')
 def index():
     return render_template('index.html')
 
-@app.route('/health')
-def health():
-    return "OK", 200
-
 @app.route('/enhance', methods=['POST'])
 def enhance():
+    if 'audio_file' not in request.files:
+        return render_template('index.html', error="❌ No file uploaded")
+
+    file = request.files['audio_file']
+    if file.filename == '':
+        return render_template('index.html', error="❌ No file selected")
+
+    filename = secure_filename(file.filename)
+    input_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    file.save(input_path)
+
+    # Preprocess the input
+    noisy_audio, sr = preprocess_audio(input_path)
+
+    # Enhance the speech using the model
+    enhanced_audio = enhance_speech(model, noisy_audio)
+
+    # Save enhanced audio
+    enhanced_filename = f"enhanced_{filename}"
+    enhanced_path = os.path.join(app.config['ENHANCED_FOLDER'], enhanced_filename)
+    save_audio(enhanced_path, enhanced_audio, sr)
+
+    # Calculate PESQ
     try:
-        if 'audio_file' not in request.files:
-            return render_template('index.html', error="❌ No file uploaded")
-
-        file = request.files['audio_file']
-
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            input_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            output_path = os.path.join(app.config['ENHANCED_FOLDER'], f'enhanced_{filename}')
-
-            file.save(input_path)
-
-            # Enhance and get PESQ score
-            enhanced_path, pesq_score = enhance_audio(input_path, output_path)
-
-            gc.collect()  # Clean memory
-
-            return render_template('result.html',
-                original_file=url_for('static', filename=f'uploads/{filename}'),
-                enhanced_file=url_for('static', filename=f'enhanced/enhanced_{filename}'),
-                pesq_score=f"{pesq_score:.2f}"
-            )
-
-        return render_template('index.html', error="❌ Invalid file type")
-
+        pesq_score = calculate_pesq(input_path, enhanced_path, sr)
     except Exception as e:
-        traceback.print_exc()
-        return render_template('index.html', error=f"⚠️ Enhancement failed: {str(e)}")
+        pesq_score = None
+        print("PESQ calculation failed:", e)
+
+    return render_template(
+        'result.html',
+        original_file='/' + input_path,
+        enhanced_file='/' + enhanced_path,
+        pesq_score=pesq_score
+    )
 
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host='0.0.0.0', port=port)
-
-# Author - Kamal Kandhal
+    app.run(debug=True)
