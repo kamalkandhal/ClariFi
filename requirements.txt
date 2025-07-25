@@ -7,8 +7,9 @@ librosa
 soundfile
 scipy
 matplotlib
-pesq
+pesq==0.0.4
+
 pystoi
 scikit-learn
-pypesq==1.2.4
+# pypesq==1.2.4
 
