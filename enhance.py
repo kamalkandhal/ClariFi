@@ -6,7 +6,7 @@ import pickle
 
 from tensorflow.keras.models import load_model
 from utils.preprocess import extract_features
-from utils.audio_utils import apply_istft, butter_lowpass_filter, HOP_LENGTH, SR
+from utils.audio_utils import apply_istft, butter_lowpass_filter, HOP_LENGTH, SR, calculate_pesq
 
 MODEL_PATH = "models/frame_model.keras"
 NORM_PATH = "models/norm.pkl"
@@ -36,9 +36,17 @@ def enhance_audio(noisy_file, output_path="static/enhanced/enhanced.wav"):
     enhanced_audio = apply_istft(mag, phase)
     enhanced_audio = butter_lowpass_filter(enhanced_audio)
 
-    # Save
+    # Save enhanced audio
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     sf.write(output_path, enhanced_audio, SR)
     print(f"✅ Enhanced audio saved at: {output_path}")
 
-    return None  # lite version skips metrics/spectrogram
+    # Calculate PESQ score
+    try:
+        pesq_score = calculate_pesq(noisy_file, output_path)
+        print(f"🎯 PESQ Score: {pesq_score:.2f}")
+    except Exception as e:
+        print(f"⚠️ PESQ calculation failed: {e}")
+        pesq_score = -1  # Default in case of failure
+
+    return output_path, pesq_score

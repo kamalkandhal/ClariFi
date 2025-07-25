@@ -1,4 +1,37 @@
+
+<!-- templates/result.html -->
 <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Result - ClariFi</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>✅ Audio Enhanced!</h1>
+
+        <div class="player">
+            <h3>🔉 Original</h3>
+            <audio controls>
+                <source src="{{ original_file }}" type="audio/wav">
+                Your browser does not support audio playback.
+            </audio>
+
+            <h3>✨ Enhanced</h3>
+            <audio controls>
+                <source src="{{ enhanced_file }}" type="audio/wav">
+                Your browser does not support audio playback.
+            </audio>
+        </div>
+
+        <a class="back" href="/">⬅️ Enhance Another</a>
+    </div>
+</body>
+</html>
+
+
+{% comment %} <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -27,4 +60,4 @@
     <a href="{{ url_for('index') }}">🔁 Enhance another file</a>
   </div>
 </body>
-</html>
+</html> {% endcomment %}

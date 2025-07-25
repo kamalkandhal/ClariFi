@@ -44,22 +44,17 @@ def enhance():
             input_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             output_path = os.path.join(app.config['ENHANCED_FOLDER'], f'enhanced_{filename}')
 
-            # # Optional: Reject large files (limit to ~15 seconds)
-            # file.seek(0, os.SEEK_END)
-            # if file.tell() > 500000:  # ~500KB = ~15s mono @ 16kHz
-            #     return "❌ File too large. Limit to 15 seconds.", 400
-            # file.seek(0)
-
             file.save(input_path)
 
-            # Enhance
-            enhance_audio(input_path, output_path)
+            # Enhance and get PESQ score
+            enhanced_path, pesq_score = enhance_audio(input_path, output_path)
 
             gc.collect()  # Clean memory
 
             return render_template('result.html',
                 original_file=url_for('static', filename=f'uploads/{filename}'),
-                enhanced_file=url_for('static', filename=f'enhanced/enhanced_{filename}')
+                enhanced_file=url_for('static', filename=f'enhanced/enhanced_{filename}'),
+                pesq_score=f"{pesq_score:.2f}"
             )
 
         return "❌ Invalid file type", 400
@@ -71,5 +66,5 @@ def enhance():
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 10000))
     app.run(host='0.0.0.0', port=port)
-    
+
 # Author - Kamal Kandhal
