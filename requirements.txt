@@ -10,3 +10,5 @@ matplotlib
 pesq
 pystoi
 scikit-learn
+pypesq==1.2.4
+
