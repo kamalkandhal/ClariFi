@@ -14,6 +14,7 @@ os.makedirs(app.config['OUTPUT_FOLDER'], exist_ok=True)
 def index():
     return render_template('index.html')
 
+# ✅ Existing /upload route kept as-is
 @app.route('/upload', methods=['POST'])
 def upload():
     if 'file' not in request.files:
@@ -38,16 +39,34 @@ def upload():
                                input_audio=input_path,
                                output_audio=output_path)
 
+# ✅ New /enhance route (for API-like access)
+@app.route('/enhance', methods=['GET', 'POST'])
+def enhance_endpoint():
+    if request.method == 'GET':
+        return "Enhance endpoint is live. Use POST with a file."
+
+    if 'file' not in request.files:
+        return 'No file part', 400
+
+    file = request.files['file']
+    if file.filename == '':
+        return 'No selected file', 400
+
+    filename = secure_filename(file.filename)
+    input_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    output_filename = f"enhanced_{filename}"
+    output_path = os.path.join(app.config['OUTPUT_FOLDER'], output_filename)
+
+    file.save(input_path)
+    enhance_audio(input_path, output_path)
+
+    # Directly send the enhanced file as download
+    return send_file(output_path, as_attachment=True)
+
 @app.route('/download/<path:filename>')
 def download_file(filename):
     return send_file(filename, as_attachment=True)
 
-# if __name__ == '__main__':
-#     app.run(debug=True, host="0.0.0.0")
-
-
-
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=False)
-
