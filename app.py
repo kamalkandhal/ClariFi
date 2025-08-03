@@ -14,13 +14,13 @@ os.makedirs(app.config['OUTPUT_FOLDER'], exist_ok=True)
 def index():
     return render_template('index.html')
 
-# ✅ Existing /upload route kept as-is
+# ✅ Updated to use 'audio_file' instead of 'file'
 @app.route('/upload', methods=['POST'])
 def upload():
-    if 'file' not in request.files:
+    if 'audio_file' not in request.files:
         return 'No file part'
 
-    file = request.files['file']
+    file = request.files['audio_file']
     if file.filename == '':
         return 'No selected file'
 
@@ -39,16 +39,16 @@ def upload():
                                input_audio=input_path,
                                output_audio=output_path)
 
-# ✅ New /enhance route (for API-like access)
+# ✅ /enhance route updated to support 'audio_file'
 @app.route('/enhance', methods=['GET', 'POST'])
 def enhance_endpoint():
     if request.method == 'GET':
         return "Enhance endpoint is live. Use POST with a file."
 
-    if 'file' not in request.files:
+    if 'audio_file' not in request.files:
         return 'No file part', 400
 
-    file = request.files['file']
+    file = request.files['audio_file']
     if file.filename == '':
         return 'No selected file', 400
 
@@ -60,7 +60,7 @@ def enhance_endpoint():
     file.save(input_path)
     enhance_audio(input_path, output_path)
 
-    # Directly send the enhanced file as download
+    # Directly return the enhanced file
     return send_file(output_path, as_attachment=True)
 
 @app.route('/download/<path:filename>')
