@@ -1,7 +1,7 @@
-from flask import Flask, render_template, request, send_file, url_for
+from flask import Flask, render_template, request, send_file, send_from_directory
 import os
 from werkzeug.utils import secure_filename
-from enhance import enhance_audio  # ✅ Correct file used
+from enhance import enhance_audio
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
@@ -10,11 +10,19 @@ app.config['OUTPUT_FOLDER'] = 'outputs'
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['OUTPUT_FOLDER'], exist_ok=True)
 
+# ✅ Serve uploaded and output audio files as static URLs
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+@app.route('/outputs/<filename>')
+def output_file(filename):
+    return send_from_directory(app.config['OUTPUT_FOLDER'], filename)
+
 @app.route('/')
 def index():
     return render_template('index.html')
 
-# ✅ Uses 'audio_file' and sends correct variable names
 @app.route('/upload', methods=['POST'])
 def upload():
     if 'audio_file' not in request.files:
@@ -30,17 +38,15 @@ def upload():
     output_path = os.path.join(app.config['OUTPUT_FOLDER'], output_filename)
 
     file.save(input_path)
-
-    # Call enhance_audio from enhance.py
     enhance_audio(input_path, output_path)
 
+    # ✅ Pass URLs (not local paths) to result.html
     return render_template(
         'result.html',
-        original_file='/' + input_path,
-        enhanced_file='/' + output_path
+        original_file=f"/uploads/{filename}",
+        enhanced_file=f"/outputs/{output_filename}"
     )
 
-# ✅ /enhance now behaves like /upload (renders result.html instead of forcing download)
 @app.route('/enhance', methods=['GET', 'POST'])
 def enhance_endpoint():
     if request.method == 'GET':
@@ -61,11 +67,11 @@ def enhance_endpoint():
     file.save(input_path)
     enhance_audio(input_path, output_path)
 
-    # ✅ Render the comparison page like /upload
+    # ✅ Same fix for /enhance route
     return render_template(
         'result.html',
-        original_file='/' + input_path,
-        enhanced_file='/' + output_path
+        original_file=f"/uploads/{filename}",
+        enhanced_file=f"/outputs/{output_filename}"
     )
 
 @app.route('/download/<path:filename>')
