@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, send_file
+from flask import Flask, render_template, request, send_file, url_for
 import os
 from werkzeug.utils import secure_filename
 from enhance import enhance_audio  # ✅ Correct file used
@@ -14,7 +14,7 @@ os.makedirs(app.config['OUTPUT_FOLDER'], exist_ok=True)
 def index():
     return render_template('index.html')
 
-# ✅ Updated to use 'audio_file' instead of 'file'
+# ✅ Uses 'audio_file' and sends correct variable names
 @app.route('/upload', methods=['POST'])
 def upload():
     if 'audio_file' not in request.files:
@@ -24,22 +24,23 @@ def upload():
     if file.filename == '':
         return 'No selected file'
 
-    if file:
-        filename = secure_filename(file.filename)
-        input_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        output_filename = f"enhanced_{filename}"
-        output_path = os.path.join(app.config['OUTPUT_FOLDER'], output_filename)
+    filename = secure_filename(file.filename)
+    input_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    output_filename = f"enhanced_{filename}"
+    output_path = os.path.join(app.config['OUTPUT_FOLDER'], output_filename)
 
-        file.save(input_path)
+    file.save(input_path)
 
-        # Call enhance_audio from enhance.py
-        enhance_audio(input_path, output_path)
+    # Call enhance_audio from enhance.py
+    enhance_audio(input_path, output_path)
 
-        return render_template('result.html',
-                               input_audio=input_path,
-                               output_audio=output_path)
+    return render_template(
+        'result.html',
+        original_file='/' + input_path,
+        enhanced_file='/' + output_path
+    )
 
-# ✅ /enhance route updated to support 'audio_file'
+# ✅ /enhance now behaves like /upload (renders result.html instead of forcing download)
 @app.route('/enhance', methods=['GET', 'POST'])
 def enhance_endpoint():
     if request.method == 'GET':
@@ -60,8 +61,12 @@ def enhance_endpoint():
     file.save(input_path)
     enhance_audio(input_path, output_path)
 
-    # Directly return the enhanced file
-    return send_file(output_path, as_attachment=True)
+    # ✅ Render the comparison page like /upload
+    return render_template(
+        'result.html',
+        original_file='/' + input_path,
+        enhanced_file='/' + output_path
+    )
 
 @app.route('/download/<path:filename>')
 def download_file(filename):
